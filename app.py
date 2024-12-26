@@ -74,7 +74,7 @@ async def fetch_orders():
 
 # Middleware to check secure_key in headers
 def check_secure_key():
-    provided_key = request.headers.get('secure_key')
+    provided_key = request.headers.get('X-SECURE-KEY')
     if not provided_key or provided_key != secure_key:
         abort(403, description="Forbidden: Invalid or missing key")
 
