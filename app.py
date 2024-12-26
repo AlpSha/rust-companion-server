@@ -2,7 +2,7 @@ import asyncio
 import json
 import os
 import uuid
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request, abort
 from rustplus import RustSocket, ServerDetails
 from dotenv import load_dotenv
 
@@ -16,11 +16,12 @@ server_ip = os.getenv('SERVER_IP')
 server_port = int(os.getenv('SERVER_PORT'))
 steam_id = os.getenv('STEAM_ID')
 player_token = int(os.getenv('PLAYER_TOKEN'))
+secure_key = os.getenv('SECURE_KEY')
 
 
 # Function to load items from JSON file
 def load_items():
-    with open('api/items.json', 'r') as file:
+    with open('items.json', 'r') as file:
         return json.load(file)
 
 
@@ -71,15 +72,24 @@ async def fetch_orders():
     return orders
 
 
+# Middleware to check secure_key in headers
+def check_secure_key():
+    provided_key = request.headers.get('secure_key')
+    if not provided_key or provided_key != secure_key:
+        abort(403, description="Forbidden: Invalid or missing key")
+
+
 # Flask route to fetch and return orders as JSON
 @app.route('/api/orders', methods=['GET'])
 def get_orders():
+    check_secure_key()  # Check secure_key before processing
     orders = asyncio.run(fetch_orders())
     return jsonify(orders)
 
 
 @app.route('/api/map', methods=['GET'])
 def get_map_info():
+    check_secure_key()  # Check secure_key before processing
     map_info = asyncio.run(fetch_map_info())
     return jsonify(map_info)
 
